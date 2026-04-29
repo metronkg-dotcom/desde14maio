@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0e0c0f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="14 de Maio" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>Desde 14 de Maio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0e0c0f;
+      --accent: #c084b0;
+      --accent2: #8b5fa0;
+      --text: #f0eaf4;
+      --muted: #9a8fa3;
+      --line: rgba(192, 132, 176, 0.18);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; overscroll-behavior: none; }
+
+    /* SPLASH */
+    #splash {
+      position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    #splash.oculto { opacity: 0; transform: scale(1.04); pointer-events: none; }
+    .splash-estrelas { position: absolute; inset: 0; overflow: hidden; }
+    .estrela {
+      position: absolute; border-radius: 50%; background: var(--accent);
+      animation: piscar var(--d, 3s) ease-in-out infinite var(--delay, 0s); opacity: 0;
+    }
+    @keyframes piscar { 0%,100%{opacity:0} 50%{opacity:var(--op,0.6)} }
+    .splash-lua {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #f5e6c8, #c9a96e 40%, #8b6914 80%);
+      box-shadow: 0 0 40px rgba(201,169,110,0.3), 0 0 80px rgba(201,169,110,0.1);
+      animation: luaEntrar 1.2s cubic-bezier(0.16,1,0.3,1) forwards; opacity: 0; margin-bottom: 36px;
+    }
+    @keyframes luaEntrar { 0%{opacity:0;transform:translateY(20px) scale(0.8)} 100%{opacity:1;transform:translateY(0) scale(1)} }
+    .splash-titulo {
+      font-family: 'Cormorant Garamond', serif; font-size: 2.4rem; font-style: italic; font-weight: 300;
+      color: var(--text); letter-spacing: 0.02em; text-align: center;
+      opacity: 0; animation: textoEntrar 1s cubic-bezier(0.16,1,0.3,1) 0.4s forwards;
+    }
+    .splash-sub {
+      font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted);
+      margin-bottom: 10px; text-align: center;
+      opacity: 0; animation: textoEntrar 1s cubic-bezier(0.16,1,0.3,1) 0.2s forwards;
+    }
+    .splash-linha {
+      width: 0; height: 1px; background: var(--accent); margin: 18px auto;
+      animation: linhaCresce 0.8s cubic-bezier(0.16,1,0.3,1) 0.9s forwards;
+    }
+    .splash-contador-mini {
+      font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-style: italic; color: var(--accent);
+      text-align: center; opacity: 0; animation: textoEntrar 1s ease 1.2s forwards;
+    }
+    @keyframes textoEntrar { 0%{opacity:0;transform:translateY(12px)} 100%{opacity:1;transform:translateY(0)} }
+    @keyframes linhaCresce { 0%{width:0;opacity:0} 100%{width:60px;opacity:1} }
+
+    /* APP */
+    #app { opacity: 0; transition: opacity 0.6s ease 0.2s; }
+    #app.visivel { opacity: 1; }
+
+    /* HEADER */
+    header {
+      text-align: center;
+      padding-top: max(env(safe-area-inset-top, 20px), 50px);
+      padding-bottom: 30px; padding-left: 20px; padding-right: 20px;
+    }
+    header::after { content:''; display:block; width:60px; height:1px; background:var(--accent); margin:20px auto 0; }
+    header p { font-size:0.72rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+    header h1 { font-family:'Cormorant Garamond',serif; font-size:clamp(2rem,7vw,3.2rem); font-weight:300; font-style:italic; }
+
+    /* CONTADOR */
+    .contador-wrap { text-align:center; padding:28px 20px 50px; }
+    #contador { font-family:'Cormorant Garamond',serif; font-size:clamp(1.2rem,4vw,2rem); font-style:italic; color:var(--accent); }
+
+    /* BTN NOTIF */
+    .btn-notif {
+      display:block; margin:-20px auto 40px; padding:10px 22px;
+      background:transparent; border:1px solid var(--line); border-radius:2px;
+      color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.75rem;
+      letter-spacing:0.1em; text-transform:uppercase; cursor:pointer;
+      transition:color 0.3s,border-color 0.3s;
+    }
+    .btn-notif:hover,.btn-notif.ativo { color:var(--accent); border-color:var(--accent); }
+
+    /* GALERIA */
+    .galeria { max-width:680px; margin:0 auto; padding:0 20px; }
+    .foto-item { margin-bottom:70px; opacity:0; transform:translateY(30px); transition:opacity 0.7s ease,transform 0.7s ease; }
+    .foto-item.visivel { opacity:1; transform:translateY(0); }
+    .foto-item img { width:100%; border-radius:4px; display:block; filter:brightness(0.93) saturate(0.9); transition:filter 0.4s ease; }
+    .foto-item img:hover { filter:brightness(1) saturate(1.05); }
+    .foto-meta { margin-top:14px; display:flex; gap:14px; align-items:baseline; }
+    .foto-data { font-size:0.68rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); white-space:nowrap; flex-shrink:0; }
+    .foto-legenda { font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-style:italic; color:var(--muted); line-height:1.55; }
+
+    /* DIVISOR */
+    .divisor { width:50px; height:1px; background:var(--line); margin:10px auto 80px; }
+
+    /* TIMELINE */
+    .timeline-section { max-width:680px; margin:0 auto; padding:0 20px 80px; }
+    .timeline-title { font-family:'Cormorant Garamond',serif; font-size:1.8rem; font-style:italic; font-weight:300; color:var(--text); margin-bottom:40px; text-align:center; }
+    .timeline-title::after { content:''; display:block; width:40px; height:1px; background:var(--accent); margin:12px auto 0; }
+    .timeline { position:relative; padding-left:28px; }
+    .timeline::before { content:''; position:absolute; left:6px; top:6px; bottom:6px; width:1px; background:var(--line); }
+    .timeline-item { position:relative; margin-bottom:36px; opacity:0; transform:translateX(-16px); transition:opacity 0.6s ease,transform 0.6s ease; }
+    .timeline-item.visivel { opacity:1; transform:translateX(0); }
+    .timeline-item::before { content:''; position:absolute; left:-25px; top:6px; width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent2); }
+    .tl-data { font-size:0.68rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent); margin-bottom:4px; }
+    .tl-evento { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-style:italic; color:var(--text); line-height:1.4; }
+    .tl-desc { font-size:0.82rem; color:var(--muted); margin-top:3px; line-height:1.5; }
+
+    /* NAV */
+    nav { text-align:center; padding:20px 20px 40px; }
+    nav a { display:inline-block; margin:8px; color:var(--muted); text-decoration:none; border:1px solid var(--line); padding:10px 22px; border-radius:2px; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase; transition:color 0.3s,border-color 0.3s; }
+    nav a:hover { color:var(--accent); border-color:var(--accent); }
+
+    /* BANNER INSTALAR */
+    #banner-instalar {
+      display:none; position:fixed;
+      bottom:max(env(safe-area-inset-bottom,0px),16px);
+      left:16px; right:16px;
+      background:#1e1a22; border:1px solid var(--line); border-radius:10px;
+      padding:16px 18px; z-index:1000;
+      animation:subirBanner 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+    @keyframes subirBanner { from{transform:translateY(100px);opacity:0} to{transform:translateY(0);opacity:1} }
+    #banner-instalar p { font-size:0.85rem; color:var(--muted); margin-bottom:12px; line-height:1.4; }
+    #banner-instalar p strong { color:var(--text); font-weight:400; }
+    .banner-btns { display:flex; gap:10px; }
+    .btn-instalar { flex:1; padding:10px; background:var(--accent2); border:none; border-radius:6px; color:#f0eaf4; font-family:'DM Sans',sans-serif; font-size:0.8rem; cursor:pointer; transition:background 0.2s; }
+    .btn-instalar:hover { background:var(--accent); }
+    .btn-nao { padding:10px 16px; background:transparent; border:1px solid var(--line); border-radius:6px; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.8rem; cursor:pointer; }
+
+    /* OFFLINE */
+    #offline-badge { display:none; position:fixed; top:12px; left:50%; transform:translateX(-50%); background:#2a1f2e; border:1px solid var(--line); border-radius:20px; padding:6px 14px; font-size:0.72rem; color:var(--muted); z-index:500; }
+
+    /* FOOTER */
+    footer { text-align:center; padding:20px; font-size:0.75rem; color:var(--muted); border-top:1px solid var(--line); letter-spacing:0.05em; }
+  </style>
+</head>
+<body>
+
+  <div id="splash">
+    <div class="splash-estrelas" id="estrelas"></div>
+    <div class="splash-lua"></div>
+    <div>
+      <p class="splash-sub">nossa história</p>
+      <h1 class="splash-titulo">Desde 14 de Maio</h1>
+      <div class="splash-linha"></div>
+      <p class="splash-contador-mini" id="splash-contador"></p>
+    </div>
+  </div>
+
+  <div id="offline-badge">modo offline</div>
+
+  <div id="app">
+
+    <header>
+      <p>nossa história</p>
+      <h1>Desde 14 de Maio</h1>
+    </header>
+
+    <div class="contador-wrap"><div id="contador"></div></div>
+
+    <div style="text-align:center;margin-top:-20px;margin-bottom:40px;">
+      <button class="btn-notif" id="btn-notif" onclick="pedirNotificacao()">🔔 Ativar lembrete de aniversário</button>
+    </div>
+
+    <section class="galeria">
+
+      <div class="foto-item">
+        <img src="foto1.jpg" alt="Primeira viagem" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">Mai 2025</span><span class="foto-legenda">Foi nossa primeira viagem, um momento inesquecível, onde o tempo passava, onde o tempo parava, onde eu me apaixonava, onde eu me perdia e me encontrava.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto2.jpg" alt="Três dias de loucuras" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">Mai 2025</span><span class="foto-legenda">Foram três dias de completas loucuras, onde o tempo passava, onde o tempo parava. Novamente eu voltava a sonhar, despertava, voltava a viver. Quero viver para ser motivo do seu sorriso.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto3.jpg" alt="Fecharei a cara" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">Mai 2025</span><span class="foto-legenda">Fecharei a cara sempre que precisar te proteger, mas para você sempre guardarei meu sorriso.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto4.jpg" alt="Fritando no sol" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">15 Mar 2026</span><span class="foto-legenda">Fritando no sol, porém com amor. O calor de fora nunca chegou perto do que sinto por dentro quando estou com você.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto5.jpg" alt="Fritando no sol 2" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">15 Mar 2026</span><span class="foto-legenda">Ela faz careta pro sol, mas nunca pra mim. Esse sorriso dela é o que me faz querer ficar.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto6.jpg" alt="Momento juntos" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">28 Fev 2026</span><span class="foto-legenda">Momento juntos. À noite, ao lado dela, até o silêncio tem cheiro bom.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto7.jpg" alt="Viagem coração" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">16 Fev 2026</span><span class="foto-legenda">Parados em frente a um coração de ferro, e o nosso batia mais forte do que tudo ali.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto8.jpg" alt="Viagem beijo" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">16 Fev 2026</span><span class="foto-legenda">Um beijo no meio da viagem, no meio do mundo, no meio de tudo. Esse momento é meu lugar favorito.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto9.jpg" alt="Viagem bar" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">16 Fev 2026</span><span class="foto-legenda">Brindando a vida e a nós dois. Com ela, até o ordinário vira celebração.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto10.jpg" alt="Viagem sorriso" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">16 Fev 2026</span><span class="foto-legenda">O sorriso dela nessa viagem ficou guardado em mim. Ela nem sabe o quanto ilumina.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto11.jpg" alt="Virada de ano beijo" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">31 Dez 2025 → 1 Jan 2026</span><span class="foto-legenda">Nossa primeira virada de ano juntos. Beijei ela quando o relógio marcou meia-noite, e soube que quero fazer isso todo ano pelo resto da vida.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto12.jpg" alt="Virada de ano abraço" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">31 Dez 2025 → 1 Jan 2026</span><span class="foto-legenda">Que todos os anos novos sejam assim — com ela no meu colo e o futuro na frente da gente.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto13.jpg" alt="Pescaria" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">31 Dez 2025 → 1 Jan 2026</span><span class="foto-legenda">Ela foi pescar no último dia do ano e pescou o peixe mais bonito. Orgulho que não cabe no peito.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto14.jpg" alt="Momento juntos" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">2025</span><span class="foto-legenda">Momento juntos. Não lembro a data, mas lembro cada detalhe — o cheiro, a luz, a leveza de estar com ela.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto15.jpg" alt="Alguma viagem" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">2025</span><span class="foto-legenda">Alguma viagem, algum lugar — mas com ela do lado, qualquer lugar vira destino.</span></div>
+      </div>
+
+      <div class="foto-item">
+        <img src="foto16.jpg" alt="Comendo a comidinha" loading="lazy"/>
+        <div class="foto-meta"><span class="foto-data">2025</span><span class="foto-legenda">Ela comendo a comidinha com aquela cara de feliz. Esses momentos pequenos são os que eu mais guardo.</span></div>
+      </div>
+
+    </section>
+
+    <div class="divisor"></div>
+
+    <section class="timeline-section">
+      <h2 class="timeline-title">Nossa linha do tempo</h2>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="tl-data">14 de Maio de 2025</div>
+          <div class="tl-evento">O começo de tudo 💜</div>
+          <div class="tl-desc">Desde esse dia, nada foi mais o mesmo.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-data">Maio de 2025</div>
+          <div class="tl-evento">Nossa primeira viagem juntos</div>
+          <div class="tl-desc">Três dias de loucuras que nunca vou esquecer. Foi aí que eu soube que ela era especial.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-data">31 Dez 2025 → 1 Jan 2026</div>
+          <div class="tl-evento">Primeira virada de ano juntos 🎆</div>
+          <div class="tl-desc">Pescaria de dia, beijo na meia-noite. O melhor início de ano da minha vida.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-data">16 de Fevereiro de 2026</div>
+          <div class="tl-evento">Viagem</div>
+          <div class="tl-desc">A estrada com você é sempre mais bonita. Cada quilômetro vale quando é ao seu lado.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-data">28 de Fevereiro de 2026</div>
+          <div class="tl-evento">Momento juntos</div>
+          <div class="tl-desc">Os dias simples ao seu lado valem mais do que qualquer aventura.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-data">15 de Março de 2026</div>
+          <div class="tl-evento">Fritando no sol, mas com amor</div>
+          <div class="tl-desc">O sol queimava, mas estar com ela fazia valer qualquer calor.</div>
+        </div>
+      </div>
+    </section>
+
+    <nav>
+      <a href="lua.html">Ver a lua do nosso dia</a>
+      <a href="thoseeyes.html">Ouvir nossa música</a>
+    </nav>
+
+    <footer>Feito com amor por João Victor 💜</footer>
+
+  </div>
+
+  <div id="banner-instalar">
+    <p><strong>Adicionar à tela inicial</strong><br>Instale o app para acessar mesmo sem internet 💜</p>
+    <div class="banner-btns">
+      <button class="btn-instalar" id="btn-instalar-confirmar">Instalar app</button>
+      <button class="btn-nao" onclick="fecharBanner()">Agora não</button>
+    </div>
+  </div>
+
+  <script>
+    /* ESTRELAS */
+    const cont = document.getElementById('estrelas');
+    for (let i = 0; i < 60; i++) {
+      const s = document.createElement('div');
+      s.className = 'estrela';
+      s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*4}s;--op:${0.3+Math.random()*0.7};width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;`;
+      cont.appendChild(s);
+    }
+
+    /* CONTADOR */
+    const dataInicial = new Date("2025-05-14T00:00:00").getTime();
+    function calcularTempo() {
+      const d = Date.now() - dataInicial;
+      return `${Math.floor(d/86400000)}d ${Math.floor(d%86400000/3600000)}h ${Math.floor(d%3600000/60000)}m ${Math.floor(d%60000/1000)}s juntos 💕`;
+    }
+    function atualizarContador() {
+      const t = calcularTempo();
+      document.getElementById('contador').textContent = t;
+      const sc = document.getElementById('splash-contador');
+      if (sc) sc.textContent = t;
+    }
+    setInterval(atualizarContador, 1000);
+    atualizarContador();
+
+    /* SPLASH */
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('splash').classList.add('oculto');
+        document.getElementById('app').classList.add('visivel');
+        setTimeout(() => document.getElementById('splash').remove(), 900);
+      }, 2800);
+    });
+
+    /* SCROLL ANIMATION */
+    const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) e.target.classList.add('visivel'); }), { threshold: 0.08 });
+    document.querySelectorAll('.foto-item, .timeline-item').forEach(el => obs.observe(el));
+
+    /* SERVICE WORKER */
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        reg.active?.postMessage({ type: 'SCHEDULE_NOTIFICATION' });
+      });
+    }
+
+    /* OFFLINE */
+    const badge = document.getElementById('offline-badge');
+    window.addEventListener('online',  () => badge.style.display = 'none');
+    window.addEventListener('offline', () => badge.style.display = 'block');
+    if (!navigator.onLine) badge.style.display = 'block';
+
+    /* NOTIFICAÇÃO */
+    const btn = document.getElementById('btn-notif');
+    if (Notification.permission === 'granted') { btn.textContent = '🔔 Lembrete ativado'; btn.classList.add('ativo'); }
+    async function pedirNotificacao() {
+      if (!('Notification' in window)) { alert('Seu navegador não suporta notificações.'); return; }
+      const p = await Notification.requestPermission();
+      if (p === 'granted') {
+        btn.textContent = '🔔 Lembrete ativado'; btn.classList.add('ativo');
+        navigator.serviceWorker.ready.then(r => r.active?.postMessage({ type: 'SCHEDULE_NOTIFICATION' }));
+      }
+    }
+
+    /* INSTALAR */
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault(); deferredPrompt = e;
+      setTimeout(() => document.getElementById('banner-instalar').style.display = 'block', 4000);
+    });
+    document.getElementById('btn-instalar-confirmar').onclick = async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null; fecharBanner();
+    };
+    function fecharBanner() {
+      const b = document.getElementById('banner-instalar');
+      b.style.cssText += 'transform:translateY(120px);opacity:0;transition:all 0.3s ease;';
+      setTimeout(() => b.style.display = 'none', 300);
+    }
+    window.addEventListener('appinstalled', fecharBanner);
+  </script>
+</body>
+</html>
